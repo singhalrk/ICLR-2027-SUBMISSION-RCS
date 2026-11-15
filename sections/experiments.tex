@@ -40,7 +40,7 @@ Our calibration procedures operate on score functions evaluated on a held-out ca
 \begin{figure*}[t]
 \centering
     \includegraphics[width=\linewidth]{figures/compare_panel_max_score.pdf}
-    \caption{\textbf{Control of misclassification rates on \textsc{CIFAR-10}.} \textbf{Left:} The cumulative fraction of samples halted at each sampling stage. \textbf{Right:} Predictive accuracy of stopped samples as a function of the number of acquired patches. We observe that \gls{method} successfully maintains the misclassification rate below the specified risk level ($\alpha = 0.1$), whereas heuristic baselines consistently violate the safety threshold.}
+    \caption{\textbf{Control of misclassification rates on \textsc{CIFAR-10}.} \textbf{Left:} The cumulative fraction of samples halted at each sampling stage. \textbf{Right:} Predictive accuracy of stopped samples as a function of the number of acquired patches. At the final horizon, the empirical stopped-sample misclassification rate is below the target ($\alpha=0.1$); intermediate checkpoint accuracies are descriptive and are not simultaneously certified by the policy-level theorem. Heuristic baselines frequently exceed the target.}
     \label{fig:cifar-10}
 \end{figure*}
 
@@ -74,9 +74,7 @@ For Clinical Prostate MRI, we report \textsc{fnr} among stopped PI-RADS-positive
       $\cT = \{5\%, 8\%, 12.5\%, 15\%, 25\%\}$.
       The panel reports stopped fraction together with class-conditional \textsc{fnr} among stopped
       positives for \textsc{ACL} tears and meniscus tears
-      We observe that \gls{method} controls each pathology-specific \textsc{fnr} at the
-      user-specified level ($\alpha = 0.1$) across acquisition rates, including at low
-      undersampling such as $5\%$, while heuristic baselines violate the threshold.
+      The observed pathology-specific \textsc{fnr} among cumulative stopped positives is below the user-specified level ($\alpha=0.1$) at the evaluated acquisition rates, including $5\%$. These checkpoint curves are empirical; the policy-level certificate concerns the eventually stopped cohort.
       }
       \label{fig:knee-slice-results}
   \end{center}
@@ -95,8 +93,7 @@ For Clinical Prostate MRI, we report \textsc{fnr} among stopped PI-RADS-positive
       \textbf{Center/Right:} \textsc{fnr} and balanced accuracy on the stopped cohort, where the controlled
       risk is the false-negative rate among PI-RADS-positive exams ($\mathrm{PI\textrm{-}RADS}\!\geq\!3$)
       that have already been halted.
-      We observe that \gls{method} maintains this stopped-sample \textsc{fnr} at the user-specified level
-      ($\alpha = 0.1$) across acquisition stages, whereas baseline strategies violate the safety threshold.}
+      The empirical stopped-sample \textsc{fnr} is below the target ($\alpha=0.1$) at the evaluated acquisition stages, whereas baseline strategies exceed the target. The theorem does not separately certify each stage.}
       \label{fig:prostate-results}
   \end{center}
 \end{figure*}
@@ -119,13 +116,13 @@ Second, \textbf{Forced with Calibrated Decision Thresholds} where the model is f
 The score threshold used to make a prediction at each sampling rate is calibrated to maximize some metric of interest (we use balanced accuracy). 
 This is referred to as ``Forced ($p^+ > \theta^*$)" in Figures \ref{fig:knee-slice-results} and \ref{fig:prostate-results}.
 Third, \textbf{Heuristic Stopping Thresholds} determine dynamic stopping times based on some heuristic threshold on the scores. 
-We use Confidence and Entropy of the predictions.
+We use Confidence and Entropy of the predictions. We additionally evaluate two calibration-based stopping baselines, Operating Point and Selective Inference, on all three datasets (\cref{app:baselines}); both choose per-checkpoint thresholds at a common nominal risk target, but only our procedure supplies the stated finite-sample certificate.
 
 
 \paragraph{Results.} 
 For our synthetic CIFAR-10 experiment, we use the misclassification rate as the risk ($R(y, C_{\alpha}(\mbx_t, t)) = \mathbf{I}(y \not\in C_\alpha(\mbx_t, t))$), and control it at the rate of $10\%$ ($\alpha=0.1$), implying a target coverage/accuracy of $90\%$. 
 For both datasets, we report performance as a function of the percentage of features acquired (a.k.a., the acquisition rate) and at every acquisition rate, we track the cumulative percentage of stopped samples. 
-This is a direct indicator of our proposed guarantee: for all stopped samples, we maintain an accuracy level corresponding to the input miss-coverage rate ($\alpha$). We compare the performance of \gls{method} against the Fixed Sampling Rate Stopping or ``Forced", Confidence-based Thresholding, and Entropy-based Thresholding. See Figure~\ref{fig:cifar-10} for results on \textsc{cifar-10} dataset. Thresholds for the Entropy and Confidence baselines are set to $0.5$.
+The checkpoint-level curves describe empirical performance among samples stopped up to each stage; the guarantee itself concerns the population of all eventually stopped samples. We compare the performance of \gls{method} against the Fixed Sampling Rate Stopping or ``Forced", Confidence-based Thresholding, and Entropy-based Thresholding. See Figure~\ref{fig:cifar-10} for results on \textsc{cifar-10} dataset. Thresholds for the Entropy and Confidence baselines are set to $0.5$.
 
 In our clinical diagnosis tasks, the risk of interest is false-negative error among sample that have been stopped.
 For FastMRI knee, this is instantiated as a \emph{class-conditional} multi-label guarantee: we control pathology-specific \textsc{fnr} for ACL tear and meniscus tear separately, and we report the corresponding per-pathology curves in \cref{fig:knee-slice-results}.
@@ -133,15 +130,14 @@ For Prostate PI-RADS, the task is binary, so the same stopped-sample \textsc{fnr
 
 We instantiate $\cD_\textsc{stop}(\mbx_t; \lambda)$ using \emph{ambiguity-band stopping rules}. For each acquisition time $t$ and task $k$, we define an uncertainty interval $[\ell_{t,k}(\lambda), u_{t,k}(\lambda)]$. The parameter $\lambda \in [0, 1]$ scales the band's width, interpolating from maximal ambiguity (highly conservative) to a narrow, data-driven baseline (aggressive). The policy halts acquisition at the first step where predictive scores for \emph{all} controlled tasks exit their respective bands, assigning terminal predictions based on the side of the exit. While we detail this specific band construction in Appendix \ref{app:ambiguity_bands}, our \gls{method} guarantees remain valid for any arbitrary stopping rule parameterized by $\lambda$. 
 
-In \cref{fig:knee-slice-results,fig:prostate-results} we observe that \gls{method} shows efficient stopping behavior while always adhering to the risk constraint. Furthermore, across both sets of experiments, we observe that even though the baseline method ``Forced ($p^+ > \theta^*$)" is calibrated to maximize the balanced accuracy, \gls{method} shows comparable performance while never violating the risk threshold.
+In \cref{fig:knee-slice-results,fig:prostate-results}, we observe early stopping with empirical checkpoint-level \textsc{fnr} below the nominal target. The ``Forced ($p^+ > \theta^*$)" baseline calibrates its decision threshold to maximize balanced accuracy, while our procedure certifies eventual stopped-sample class-conditional risk. Additional comparisons in \cref{app:baselines} report empirical risk and stopping fraction for Operating Point and Selective Inference under the same nominal target. \Cref{app:ablations} studies the sensitivity of certification to $\delta$, candidate-grid size, and calibration sample size.
 
 \paragraph{Sensitivity to the risk level $\alpha$.}
 Beyond fixed operating points, we study how stopping behavior changes as the user varies the allowed risk $\alpha$.
 For each $\alpha$ on a grid, we re-select the certified threshold $\widehat{\lambda}(\alpha)$ on the same calibration scores and evaluate the resulting policy on the held-out test set.
 \cref{fig:alpha-sweep} summarizes these sweeps for FastMRI knee and Prostate PI-RADS.
 The top panels show the cumulative stopped fraction versus acquisition rate, with one curve per $\alpha$: larger $\alpha$ (more permissive risk) yields earlier and more frequent stopping.
-The bottom panel reports the expected acquisition rate at stopping, $\mathbb{E}[r_{\mathrm{stop}}]$, as a function of $\alpha$, quantifying the efficiency--risk tradeoff induced by calibration.
-As expected, $\mathbb{E}[r_{\mathrm{stop}}]$ decreases monotonically as $\alpha$ increases, while the fixed-$\alpha$ panels above confirm that the corresponding stopped cohorts remain consistent with the requested risk level.
+The bottom panel reports the expected acquisition rate at stopping, $\mathbb{E}[r_{\mathrm{stop}}]$, as a function of $\alpha$, quantifying the empirical efficiency--risk tradeoff induced by calibration. In the evaluated sweep, $\mathbb{E}[r_{\mathrm{stop}}]$ decreases as $\alpha$ increases. This is an empirical observation, not a general monotonicity guarantee; checkpoint-level risk curves are likewise empirical.
 
 \begin{figure*}[t]
   \vskip 0.2in
@@ -186,10 +182,10 @@ We treat JAFA as an acquisition backbone and construct a parameterized stopping 
 To isolate the effect of the wrapper cleanly, we perform this experiment on \textbf{CIFAR-10} only. As in \ref{sec:experiments_1}, we report: 1)  the cumulative fraction of stopped samples versus acquisition rate, and 2) he stopped-sample performance versus acquisition rate.
 From \cref{fig:alpha-sweep} (lower panel), 
 %\cref{fig:cifar-jafa}, 
-we observe that calibrating on JAFA-generated acquisition trajectories enhances the efficiency of the stopping procedure. At the same time, our wrapper ensures that the accuracy of the stopped samples remains above $90\%$. Because both methods use the same underlying predictor, \gls{method} achieves this result by abstaining on the few samples that JAFA would otherwise misclassify.
+we observe that the wrapper trades some JAFA stopping efficiency for higher empirical accuracy among stopped samples. The statistical certificate applies to the eventually stopped cohort, provided the deployed adaptive trajectory distribution matches calibration; checkpoint-level accuracy curves are empirical.
 
 \section{Discussion}
 In this work, we introduce risk-controlled stopping (\textsc{rcs}), a method to safely stop data acquisition in sequential classification tasks. \gls{method} provides post-hoc, distribution-free risk control at user desired thresholds and notions of risk. These risk functions and thresholds can be changed without requiring any further training. Our experiments on the \textsc{fastMRI} knee and the prostate dataset show that \gls{method} can significantly accelerate clinical decision making pipelines, while rigorously controlling class-conditional (or stopped-sample) false-negative risk despite accelerations. Furthermore, we demonstrate that \gls{method} is complementary to learned acquisition policies, and provides rigorous statistical guarantees on their behavior. 
 
 \subsection{Limitations}
-Producing the \gls{method} guarantee requires access to fully-sampled data or data sampled from the same policy. However, in future work, we plan on using masked data that could be collected during a deployment of early stopping methods. Moreover, the class of policies parameterized by $\lambda$ could be enriched by allowing $\lambda$ to be multi-dimensional, thereby capturing the strong correlation structure among errors across nearby acquisition steps.
+Producing the \gls{method} guarantee requires independent calibration trajectories drawn from the same induced distribution as deployment and a stopping-policy family fixed before risk calibration. In slice-level knee MRI, multiple slices from one patient or volume may be dependent; the i.i.d. guarantee does not automatically apply if such slices are treated as independent calibration units. Shifts in patient population, scanner protocol, or adaptive acquisition policy can invalidate the certificate and may require representative recalibration or a shift-aware method. The guarantee does not extend to every intermediate stopped subset, the uncalibrated full-acquisition fallback, or end-to-end clinical noninferiority. Our sensitivity experiments probe calibration size and grid choices but do not estimate violation probability across repeated independent calibration draws. Future work could explore masked deployment data and multi-dimensional policy parameterizations.
