@@ -1,0 +1,37 @@
+name: Temporary manuscript PDF preflight
+on:
+  push:
+    branches: [temporary-compile-check-2026-11-15]
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build LaTeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          args: -pdf -interaction=nonstopmode -halt-on-error -file-line-error
+      - name: Record page structure
+        if: success()
+        run: |
+          pdfinfo main.pdf | grep Pages > page_report.txt
+          python -m pip install --quiet pypdf
+          python - <<'PY'
+          from pypdf import PdfReader
+          reader=PdfReader('main.pdf')
+          with open('page_report.txt','a') as f:
+              for i,p in enumerate(reader.pages,1):
+                  t=p.extract_text() or ''
+                  sections=[x for x in ['Ethics statement','Reproducibility statement','References','Technical appendices and supplementary material'] if x.lower() in t.lower()]
+                  f.write(f'page {i}: {sections}; start={t[:90]!r}\\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latex-preflight
+          path: |
+            main.pdf
+            main.log
+            page_report.txt
+          if-no-files-found: warn
