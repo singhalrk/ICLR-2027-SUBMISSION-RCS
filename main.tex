@@ -18,11 +18,7 @@
 `   
 \maketitle
 
-\begin{abstract}
-In clinical diagnosis and tomographic imaging, data arrive one measurement at a time and each measurement costs time, money, or patient burden. Deciding \emph{when} enough   has been acquired is as consequential as deciding what to acquire, yet existing acquisition policies and heuristic stopping rules offer no guarantee on the risk of the decision made when acquisition halts. We introduce \gls{method}, a post-hoc, distribution-free procedure that selects a stopping rule so that a user-specified risk, such as the false negative or false positive rate, is controlled among the samples on which the system commits to a decision. \gls{method} treats each candidate rule as a trajectory-level selective predictor and certifies it with the Learn-Then-Test framework, giving a finite-sample guarantee on the risk \emph{conditional on stopping}. 
-Importantly, \gls{method} can be applied over any acquisition pipeline without retraining, whether it is fixed, random, or learned. 
-Because the controlled risk is absolute rather than relative to full acquisition, no rule is safe by construction; when none meets the target, \gls{method} certifies that fact and defers to full acquisition instead of returning an unsafe rule. On a synthetic \textsc{cifar}-10 benchmark, on \textsc{fastMRI} knee $k$-space acquisition, and on an internal prostate \textsc{mri} cohort, \gls{method} holds the target risk at every acquisition rate while stopping a substantial fraction of samples early, and it certifies a learned reinforcement-learning acquisition policy as a post-hoc wrapper.
-\end{abstract}
+\input{sections/abstract}
 
 \input{sections/introduction}
 \input{sections/background}
