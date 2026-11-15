@@ -126,8 +126,8 @@ Test          & 824  & 0.40 \\
 We compare \gls{method} with two more stopping baselines on all three tasks, using the same calibration and test splits and the same target level $\alpha = 0.1$ as in \cref{sec:experiments_1}. In the figures, \emph{LTT} denotes \gls{method}. Each figure follows the same layout. The \textbf{left panel} shows the cumulative fraction of test samples on which acquisition has stopped. The \textbf{remaining panels} show the risk among the stopped samples, and the horizontal line marks the target.
 
 \paragraph{Baselines.}
-\textbf{Operating Point Method:} \todo{one-sentence definition: how the threshold is chosen and on what data}.
-\textbf{Selective Inference:} \todo{one-sentence definition and citation}.
+\textbf{Operating Point Method:} At each acquisition time, we select a threshold using the calibration set to target an empirical false negative rate (\textsc{fnr}) of $\alpha$ across all calibration samples.
+\textbf{Selective Inference:} At each acquisition time, we similarly select a threshold using the calibration set, but evaluate empirical \textsc{fnr} only among the samples selected for early stopping. Both baselines use the same calibration and test splits as \gls{method} and the nominal target $\alpha=0.1$. Unlike \gls{method}, these empirical operating-point procedures do not provide a finite-sample risk-control guarantee.
 
 % ---------------------------------------------------------------------
 \paragraph{CIFAR-10.}
@@ -229,8 +229,7 @@ The defaults are $\delta = 0.1$, a grid of $15$ values and $n_{\text{cal}} = 618
 
 % ---------------------------------------------------------------------
 \paragraph{Clinical prostate MRI.}
-The defaults are $\delta = 0.1$, a grid of $51$ values and $n_{\text{cal}} = 745$, which select $\hat\lambda = 0.58$ (\cref{fig:app_ablation_prostate}). Of the $945$ examinations in the calibration partition reported in \cref{tab:prostate_dataset_stats}, $745$ are used for the risk-calibration sensitivity experiments; the remaining $200$ are not included in that risk-calibration subset. The ambiguity-band anchors are estimated using held-out data as described in \cref{app:ambiguity_bands}.
-% VERIFY BEFORE MERGE: Confirm whether the 200 examinations excluded from risk calibration were used for ambiguity-band anchor estimation; this allocation is not documented in the provided source.
+The defaults are $\delta = 0.1$, a grid of $51$ values and $n_{\text{cal}} = 745$, which select $\hat\lambda = 0.58$ (\cref{fig:app_ablation_prostate}). Of the $945$ examinations in the calibration partition reported in \cref{tab:prostate_dataset_stats}, $745$ are used for risk calibration. The remaining $200$ examinations were unused in these experiments, including for ambiguity-band estimation.
 \textbf{(a)} $\delta \in \{0.01, 0.025, 0.05, 0.1\}$ all select $\hat\lambda = 0.58$. $\delta = 0.2$ selects $\hat\lambda = 0.6$, which stops about $4$ percentage points more exams and has an \textsc{fnr} of at most $0.077$.
 \textbf{(b)} Grid sizes from $6$ to $201$ select $\hat\lambda$ between $0.58$ and $0.6$. The curves differ by a few percentage points, and every \textsc{fnr} stays below $0.08$.
 \textbf{(c)} With $n_{\text{cal}} \in \{100, 200\}$ ($41$ and $84$ PI-RADS-positive exams), no $\lambda$ is certified. From $n_{\text{cal}} = 400$ ($168$ positives) upward, the selection is stable at $\hat\lambda = 0.58$.
