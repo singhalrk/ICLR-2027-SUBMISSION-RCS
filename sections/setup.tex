@@ -1,0 +1,17 @@
+\section{Problem Setup}
+\label{sec:setup}
+An input $\mbx = [x_1, \dots, x_d]$ consists of $d$ measurements that are acquired over time. The partial observation after $t$ steps is $\mbx_t = \mbx \circ \mbs_t$, where $\mbs_t \in \{0,1\}^d$ is a mask marking the components acquired so far and $\circ$ is element-wise multiplication. The acquisition policy that produces $\mbs_t$ may be fixed in advance, random, or adaptive (a function of $\mbx_{t-1}$); in every case the observations are nested. 
+Full trajectories $(\mbx^i, y^i)$ are drawn i.i.d.\ from an unknown distribution $\cP^{\text{data}}$, and we hold out a calibration set $\cD_{\text{cal}} = \{(\mbx^i, y^i)\}_{i=1}^{n}$. 
+A pre-trained predictor $p_\theta$ returns a prediction $\hat{y}(\mbx_t)$ from any partial observation. We seek a data-dependent \emph{stopping time} $\tau(\mbx) \in \{1, \dots, d\} \cup \{\infty\}$ at which acquisition halts and the system commits to $\hat{y}(\mbx_\tau)$; $\tau(\mbx) = \infty$ means the policy defers to full acquisition.
+
+\paragraph{Why bounding the marginal risk is not sufficient. }
+It is tempting to bound the marginal risk of the stopped output, $\bbP(E_\tau)$, where $E_\tau$ is the event that the policy stopped and made an error.
+Let $S = \{\tau(\mbx) < \infty\}$ be the event that the policy stops and commits to a prediction. 
+Since, deferred samples do not count as errors from stopping, we have $E_\tau \subseteq S$ and
+\begin{align}
+\label{eq:marg_decomp}
+    \bbP(E_\tau) = \bbP(E_\tau \mid S)\,\bbP(S).
+\end{align}
+A marginal bound $\bbP(E_\tau) \le \alpha$ therefore says nothing about the error among committed decisions, $\bbP(E_\tau \mid S)$, unless $\bbP(S)$ is close to one. 
+A policy that commits on $1\%$ of samples and is wrong on every one of them satisfies $\bbP(E_\tau) = 0.01 \le \alpha$ while being useless. 
+What a clinician needs is the reliability of the decisions that are actually made. \gls{method} therefore controls the risk \emph{conditional on stopping}.

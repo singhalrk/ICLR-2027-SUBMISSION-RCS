@@ -1,0 +1,57 @@
+% \section{\textsc{casc} proofs}\label{appsec:proofs}
+% In this section, we prove that stopping criteria based on anytime-valid prediction sets can control risk at a user-desired threshold. 
+
+% \paragraph{Definition.} Here we define anytime-valid prediction sets that control risk functions at a user-specified threshold $\alpha$. First, for a desired risk level $\alpha$, let $\alpha_t$ be a sequence of risk levels such that $\sum_{t \in \cT} \alpha_t \leq \alpha$, then for a new test point $\mbx_{\text{test}, t}$, we defined anytime-valid conformal risk control sets $C_\alpha(\mbx_{\text{test}, t}, t; \lambda_t)$ as:
+% \begin{align}\label{eq:anytime_valid_sets}
+%     C_{\alpha}(\mbx_{\text{test}, t}, t; \lambda_t) := \{y: s_\theta(\mbx_{\text{test}, t}, t) \leq {\lambda}_t\}
+% \end{align}
+% where ${\lambda}_t$ is the threshold that controls the average risk on the calibration set $\cD_{\text{cal}} = \{\mbx_{t, i}, y_i\}_{i=1}^{n}$ as well as the test point $\mbx_{\text{test}, t}$ \citep{angelopoulos2022conformal},
+% \begin{align}
+%     {\lambda}_t  = \inf \{\lambda: \sum_{i=1}^{n+1} \frac{1}{n+1} R(y, C_{\alpha}(\mbx_{t,i}, t; \lambda)) \leq \alpha_t \}
+% \end{align}
+
+% Note that by construction of the sets $C_\alpha(\mbx_{\text{test}, t}, t; \lambda_t)$ and an application of theorem 1 in \citet{angelopoulos2022conformal}, we have:
+% \begin{align}
+%     \E_{\mbx, \cD_{\text{cal}} \sim \cP^{\text{data}}_{\mbx \times y}} \left[ \sum_{t \in \cT} R(y, C_\alpha(\mbx_t, t; \lambda_t))  \right] \leq \sum_{t \in \cT} \alpha_t \leq \alpha
+% \end{align}
+% Now, let $\tau$ be the stopping time defined as:
+% \begin{align}
+%     \tau = \inf\{t \in \cT \Big| |C_\alpha(\mbx_t, t; \lambda_t)| = \ell \}
+% \end{align}
+% where $\ell = |y|$ is the number of labels we are classifying from a sample $\mbx_{\text{test}, t}$. 
+
+% \begin{proposition}
+%     Let $C_\alpha(\mbx_t, t; \lambda_t)$ be anytime-valid conformal prediction sets defined in \cref{eq:anytime_valid_sets} and let $\tau$ be the stopping time:
+%     \begin{align}
+%         \tau = \inf  \{t \in \cT : |C_\alpha(\mbx_t, t)| = \ell\} 
+%     \end{align}
+%     where $\ell = |y|$ is the number of labels we are classifying from the sample $\mbx_{\text{test}, t}$. 
+%     Then halting at the stopping time $\tau$ controls the risk at the user-specified level $\alpha$:
+%     \begin{align}\nonumber
+%         \bbE_{\mbx_{\text{test}}, \cD_{\text{cal}} \sim \cP^{\text{data}}_{\mbx \times y}}\left[R\left(y, C_{\alpha}(\mbx_{\text{test}, \tau}, \tau)\right)  \right] \leq \alpha
+%     \end{align}
+%     where we assume that abstaining from a prediction incurs no risk, $R=0$. 
+% \end{proposition}
+% \begin{proof}    
+%     The risk at the stopping time $\tau$, can be decomposed as:
+%     \begin{align}
+%         &\bbE_{\mbx_{\text{test}},  \cD_{\text{cal}} \sim \cP^{\text{data}}_{\mbx \times y}}\left[R\left(y, C_{\alpha}(\mbx_{\text{test}, \tau}, \tau)\right) \right] \\
+%         & \qquad = \sum_{t \in \cT} \bbP[\tau = t] \bbE_{\mbx_{\text{test}}, \tau, \cD_{\text{cal}} \sim \cP^{\text{data}}_{\mbx \times y}}\left[R\left(y, C_{\alpha}(\mbx_{\text{test}, t}, t)\right) \right] \\
+%         & \qquad \quad + \bbP(\tau \not\in \cT) \times 0
+%     \end{align}
+%     where we note that by abstaining from prediction, we incur $0$ risk. For all $t$,  by theorem 1 in \citet{angelopoulos2022conformal}, we have:
+%     \begin{align}
+%         \E_{\mbx, \cD_{\text{cal}} \sim \cP^{\text{data}}_{\mbx \times y}} \left[ R(y, C_\alpha(\mbx_t, t; \lambda_t))  \right] \leq \alpha_t
+%     \end{align}
+%     Therefore, 
+%     \begin{align}
+%         &\bbE_{\mbx_{\text{test}}, \cD_{\text{cal}} \sim \cP^{\text{data}}_{\mbx \times y}}\left[R\left(y, C_{\alpha}(\mbx_{\text{test}, \tau}, \tau)\right) \right] \\
+%         & \qquad = \sum_{t \in \cT} \bbP[\tau = t] \bbE_{\mbx_{\text{test}, t}, \cD_{\text{cal}} \sim \cP^{\text{data}}_{\mbx \times y}}\left[R\left(y, C_{\alpha}(\mbx_{\text{test}, t}, t)\right) \right] \\
+%         & \qquad \leq \sum_t \bbP[\tau = t] \alpha_t \leq \sum_t \alpha_t \leq \alpha
+%     \end{align}
+%     as $\bbP[\tau = t] \leq 1$ for all $t$. 
+
+% \end{proof}
+
+
+

@@ -1,0 +1,13 @@
+% ===================== Required / recommended ICLR statements =====================
+% These sections appear at the end of the main text, before references, and do
+% NOT count toward the page limit.
+
+\subsection*{Ethics statement}
+This work concerns risk-controlled early stopping of medical-image acquisition. The prostate \textsc{mri} data were analyzed under an institutional IRB-approved research protocol as a retrospective study of pre-existing, de-identified clinical examinations from patients evaluated for suspected prostate cancer; no patients were enrolled and no imaging was performed for research. Splits were made at the patient level so that no patient appears in more than one of the training, validation, calibration, and test sets. \gls{method} is meant to support clinical judgment, not replace it, and any deployment would require prospective validation; in particular, faster screening can enlarge the screened population and so raise the absolute number of false positives. By design, any sample \gls{method} does not confidently stop on proceeds to the full standard-of-care protocol, so the end-to-end workflow is never less safe than current practice.
+
+\subsection*{Reproducibility statement}
+The calibration procedure is specified in \cref{sec:rcs}, with pseudocode in \cref{eq:alg_ltt} and the proof of \cref{thm:conditional_risk} in \cref{appsec:proofs}. The three policy families (confidence threshold, \textsc{jafa} Q-margin, ambiguity bands) are defined in \cref{sec:rcs} and \cref{app:ambiguity_bands}. Dataset construction, acquisition ordering, and split statistics are given in \cref{sec:experiments_1} and the appendix. \textsc{cifar}-10 and \textsc{fastMRI} are public; code for the calibration procedure and experiments will be released as anonymized supplementary material.
+
+\subsection*{AI use statement}
+% The authors used generative AI tools to edit prose for clarity and concision and to help draft the schematic in \cref{fig:rcs_figure}. 
+All technical claims, proofs, experimental designs, and results were produced and verified by the authors, who reviewed and edited every AI-assisted passage and take full responsibility for the content of this work.

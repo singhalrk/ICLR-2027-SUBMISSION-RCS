@@ -1,0 +1,71 @@
+\section{Risk-Controlled Safe Stopping via Policy-Level Certification}
+\label{sec:rcs}
+
+We first define the risk conditional on stopping and show how to test each candidate policy using the calibration samples on which it stops. 
+We then combine these tests to certify a set of policies and select one based on a user-chosen utility, defaulting to full acquisition if none can be certified. 
+Finally, we extend the procedure to class-conditional false negative and false positive rates and describe the stopping rules used in our experiments.
+
+% \gls{method} treats each candidate stopping rule as a complete trajectory-level policy, measures the loss it incurs on the calibration trajectories it stops on, and uses the LTT machinery of \cref{sec:ltt} to certify which rules control the conditional risk.
+
+\subsection{Conditional risk of a stopping policy}
+Consider a family of stopping rules $\cD_\textsc{stop}(\mbx_t; \lambda) \in \{0, 1\}$ indexed by a finite grid $\lambda \in \Lambda = \{\lambda_1, \dots, \lambda_m\}$. Each rule induces a stopping time, the first step at which it fires,
+\begin{align}
+\label{eq:stopping_time}
+    \tau_\lambda(\mbx) = \inf\{t \in \{1, \dots, d \} \mid \cD_\textsc{stop}(\mbx_t; \lambda) = 1\},
+\end{align}
+with $\tau_\lambda(\mbx) = \infty$ if the rule never fires, in which case the policy defers to full acquisition. When it fires at $t \le d$, the system commits to $\hat{y}(\mbx_t)$. For a bounded loss $\ell(y, \hat{y}) \in [0, B]$, the quantity we control is the expected loss given that the policy stops,
+\begin{align}
+\label{eq:cond_risk_def}
+    R_{\text{cond}}(\lambda) = \E_{\mbx, y \sim \cP^{\text{data}}}\left[\ell\left(y, \hat{y}(\mbx_{\tau_\lambda(\mbx)})\right) \;\middle|\; \tau_\lambda(\mbx) < \infty \right].
+\end{align}
+Our goal is to select a $\hat{\lambda} \in \Lambda$ with $R_{\text{cond}}(\hat\lambda) \le \alpha$ with probability at least $1-\delta$ over the draw of $\cD_{\text{cal}}$. 
+Changing $\lambda$ changes not only \emph{which} samples the policy stops on, but also changes \emph{when} it stops. 
+It therefore also changes the partial observation each prediction is made. 
+The map $\lambda \mapsto R_{\text{cond}}(\lambda)$ can therefore jump and need not be monotone.
+
+\paragraph{Testing each policy on the samples it stops.}
+For each $\lambda$, let $\cS(\lambda) = \{ i \le n \mid \tau_\lambda(\mbx_i) < \infty \}$ be the indices of the calibration samples where the policy stops, and let $n(\lambda) = |\cS(\lambda)|$. 
+The empirical conditional risk is the mean loss over this subset,
+\begin{align}
+    \widehat{R}_{\text{cond}}(\lambda) = \frac{1}{n(\lambda)} \sum_{i \in \cS(\lambda)} \ell\left(y^i, \hat{y}(\mbx^i_{ \tau_\lambda(\mbx^i)})\right),
+\end{align}
+and we test $H_{0,\lambda} : R_{\text{cond}}(\lambda) > \alpha$.
+The set $\cS(\lambda)$ is selected by the very rule under test. 
+Because the calibration trajectories are i.i.d.\ and membership in $\cS(\lambda)$ depends only on the trajectory itself, the stopped samples are conditional on $n(\lambda)$ draws from the distribution conditioned on stopping. 
+Hoeffding's inequality then yields a p-value that is valid conditional on $n(\lambda)$,
+\begin{align}
+\label{eq:hoeffding_pvalue}
+    p(\lambda) =
+    \begin{cases}
+        1, & \text{if } n(\lambda) = 0 \text{ or } \widehat{R}_{\text{cond}}(\lambda) \ge \alpha, \\[2pt]
+        \exp\!\left(-2 n(\lambda)\big(\alpha - \widehat{R}_{\text{cond}}(\lambda)\big)^2 / B^2\right), & \text{otherwise}.
+    \end{cases}
+\end{align}
+This conditional validity also makes the p-value valid over the random draw of the calibration set. 
+%and validity conditional on $n(\lambda)$ implies validity marginally over the calibration set.
+
+\paragraph{Multiplicity correction and selection.}
+Testing $m$ hypotheses at once calls for family-wise error control. We apply Holm's step-down procedure \citep{holm1979simple}: sort the p-values $p_{(1)} \le \cdots \le p_{(m)}$, reject $H_{(j)}$ as long as $p_{(j)} \le \delta/(m-j+1)$, and stop at the first failure. The rejected hypotheses form the safe set $\widehat{\Lambda}_{\text{safe}}$, and every $\lambda$ in it controls the conditional risk. We deploy the safe rule that maximizes a user-chosen utility $U(\lambda)$, typically the fraction of samples stopped or the negative mean stopping time. If $\widehat{\Lambda}_{\text{safe}}$ is empty, \gls{method} reports that no rule in the family meets the target and every sample is fully acquired.
+
+\begin{corollary}[Conditional risk control; corollary of LTT]
+    \label{thm:conditional_risk}
+    Let $\cD_{\text{cal}}$ consist of $n$ i.i.d.\ sample trajectories and let $\hat{\lambda}$ be selected by the procedure above. Then, provided $\widehat{\Lambda}_{\text{safe}} \neq \emptyset$,
+    \begin{align}
+        \bbP_{\cD_{\text{cal}}}\left[ \E_{\mbx, y} \left[ \ell\left(y, \hat{y}(\mbx_{\tau_{\hat\lambda}(\mbx)})\right) \;\middle|\; \tau_{\hat{\lambda}}(\mbx) < \infty \right] \leq \alpha \right] \geq 1 - \delta.
+    \end{align}
+\end{corollary}
+The result is a direct application of LTT \citep{angelopoulos2025learn}: each $\lambda$ is a selective predictor on trajectories, and LTT already certifies a selective risk over a data-dependent selected subset. 
+The argument requires only that the selection event be fixed before calibration, so it also applies to any other pre-specified event.
+%The argument uses nothing about the selection event beyond its being fixed before calibration, so it applies verbatim to any pre-specified event. 
+Pseudocode is given in \cref{eq:alg_ltt} in the appendix.
+
+\subsection{Class-conditional FNR and FPR}
+\label{sec:fnr_fpr}
+\Cref{eq:cond_risk_def} covers mis-classification directly. Clinical practice asks instead for class-conditional rates: the false negative rate among truly positive cases and the false positive rate among truly negative ones, rather than a pooled or prevalence-weighted error. For a task with labels $y \in \{0,1\}^K$ (binary when $K=1$) we certify, for each label $k$,
+\begin{align}
+    \mathrm{FNR}_k(\lambda) = \bbP\!\left(\hat{y}_k(\mbx_{\tau_\lambda}) = 0 \;\middle|\; y_k = 1,\ \tau_\lambda(\mbx) < \infty\right) \le \alpha_k,
+\end{align}
+and $\mathrm{FPR}_k$ symmetrically. This is the conditional risk of \cref{eq:cond_risk_def} under the refined selection event $\{y_k = 1,\ \tau_\lambda < \infty\}$: the effective calibration set is the stopped positives $\cS^+_k(\lambda) = \{ i : \tau_\lambda(\mbx^i) < \infty,\ y^{i}_k=1 \}$ and the loss is $\mathbf{1}\{\hat y^i_{k}=0\}$. Because the loss is binary we replace Hoeffding with the exact binomial tail, which is tighter, and we combine labels by $p(\lambda) = \max_k p_k(\lambda)$, which is valid under arbitrary dependence between labels and accommodates label-specific targets $\alpha_k$. The policy family, the stopping rule, and the Holm correction are unchanged.
+
+\paragraph{Policy families.}
+\gls{method} places no restriction on the form of the stopping rule beyond the family being fixed before calibration. We use three. A \emph{confidence threshold} on the softmax score (\textsc{cifar}-10); the \emph{\textsc{jafa} Q-margin}, the gap between the Q-value of ``stop'' and that of the best acquisition action (\cref{sec:experiments_2}); and \emph{ambiguity bands} for the \textsc{mri} tasks, where $\lambda \in [0,1]$ scales a per-label uncertainty band from never stopping ($\lambda = 0$) to an aggressive data-driven band ($\lambda = 1$), and the rule fires once every label's score has left its band (\cref{app:ambiguity_bands}).

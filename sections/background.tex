@@ -1,0 +1,38 @@
+\section{Background and Related Work}
+
+\paragraph{Dynamic feature acquisition.}
+Acquiring features sequentially at test time has been studied extensively. Early methods select greedily by a utility score \citep{utility2005}, these methods fall into three families distinguished by how they decide to stop. \emph{Fixed budgets and information gain.} EDDI \citep{EDDI} selects the feature with the largest expected information gain and reports curves over budgets. Adapted to dynamic stopping, such methods halt when the largest expected gain falls below a cost threshold $\tau$. The threshold trades information against cost, it bears no direct relation to downstream risk such as an error rate below $5\%$. \emph{Policy-based stopping.} \citet{jafa-2018} and \citet{difa_2023} cast acquisition as a Markov decision process with ``stop'' as an action and maximize a reward $R = \mathbb{I}(y_{\text{pred}} = y_{\text{true}}) - \lambda\,\mbc$. Optimizing an average reward encourages the agent to stop early on hard, expensive instances whenever the cost of more information exceeds the expected loss from an error, which is the opposite of a per-decision safety guarantee. 
+% \emph{Heuristic criteria.} Outside learned policies, a common baseline borrows early-exit rules from deep networks and stops when the maximum softmax probability exceeds a threshold such as $0.95$. Deep networks are poorly calibrated and overconfident off-distribution \citep{guo2017}, so a score of $0.95$ does not mean a $95\%$ chance of being right.
+
+\paragraph{Early classification and adaptive halting.}
+A parallel literature on time series learns when to halt, and sometimes what to measure next, by optimizing an average objective. \citet{chang2019dynamic} schedule measurements with deep reinforcement learning; EARLIEST \citep{hartvigsen2019adaptive} and the Recurrent Halting Chain \citep{hartvigsen2020recurrent} train halting networks that trade earliness against accuracy. These are strong halting backbones, but the halting point is chosen to be good on average, not certified to control a specified risk on the samples where the model actually stops. 
+\gls{method} complements these approaches: as a post-hoc wrapper, it can use the stopping scores of any such policy to certify risk conditional on stopping, as we show for \textsc{jafa} in \cref{sec:experiments_2}.
+
+\paragraph{Conformal prediction and risk control.}
+Conformal prediction constructs prediction sets with finite-sample coverage under exchangeability \citep{shafer2008tutorial,angelopoulos2022}, and conformal risk control extends the guarantee from coverage to any bounded risk \citep{angelopoulos2022conformal}. Both certify a \emph{fixed} rule on a \emph{fixed} input. Sequential acquisition violates both premises: the prediction is formed from a partial observation, and the time at which it is formed is chosen from the data. \citet{gauthier2025values} bring conformal ideas to sequential settings, and \citet{jazbec2024fast} calibrate early exits in neural networks to save inference compute. The latter bounds a marginal risk over all inputs and economizes internal computation, we reduce external physical acquisition and bound the risk on the stopped subset.
+
+\paragraph{Closest work.}
+\citet{ringel2024early} also calibrate a stopping rule with LTT, for early time-series classification. 
+The main difference is the risk being controlled. 
+They bound the \emph{accuracy gap}, the rate at which stopping early changes the prediction relative to using the full series.
+This measures agreement with the full-data model, rather than correctness. 
+For example, a cancer case that the model misses at every step has an accuracy gap of zero and is still a false negative. 
+\gls{method} instead bounds the error itself, which changes the calibration problem. 
+The accuracy gap is zero at full acquisition, giving their family a configuration that is safe by construction. 
+% Their safe rules also form a contiguous sequence that fixed-sequence testing (FST) can test in order. 
+An absolute risk has no such guaranteed safe configuration.
+% and need not be monotone in the stopping parameter. 
+% The set of safe rules can therefore be disconnected or empty.
+% This has two consequences. 
+% First, \gls{method} may certify nothing and defer to full acquisition when safe early stopping is unattainable, which is the right outcome in a clinical setting. 
+% Second, FST can miss safe rules (especially if the safe rule follows an unsafe one) because it halts at the first non-rejection.
+% We therefore use Holm's step-down procedure, which can certify safe rules anywhere in the family.
+
+\subsection{The Learn-Then-Test framework}
+\label{sec:ltt}
+Learn-Then-Test (LTT) \citep{angelopoulos2025learn} calibrates a pre-trained model post hoc. Given a family of predictors $f(\mbx;\lambda)$ indexed by a finite grid $\Lambda = \{\lambda_1,\dots,\lambda_m\}$, a bounded loss $\ell(y,\hat y) \in [0,B]$, a target level $\alpha \in (0,1)$, and a confidence level $\delta \in (0,1)$, LTT selects $\hat\lambda \in \Lambda$ such that
+\begin{align}
+\label{eq:ltt_guarantee}
+    \bbP_{\cD_{\text{cal}}}\left[ \E_{\mbx, y \sim \cP^{\text{data}}}[\ell(y, f(\mbx; \hat{\lambda}))] \le \alpha \right] \ge 1 - \delta.
+\end{align}
+It does so by treating calibration as multiple hypothesis testing on a held-out set $\cD_{\text{cal}} = \{(\mbx^i, y^i)\}_{i=1}^n$. For each $\lambda$, the null hypothesis $H_{0,\lambda} : R(\lambda) > \alpha$ states that $\lambda$ is unsafe. A concentration inequality for bounded variables (Hoeffding or empirical Bernstein) converts the empirical risk $\widehat{R}(\lambda) = \frac{1}{n}\sum_{i} \ell(y^i, f(\mbx^i; \lambda))$ into a valid p-value $p(\lambda)$. A family-wise error rate procedure at level $\delta$, such as Holm's step-down \citep{holm1979simple}, then rejects a subset of the nulls; the corresponding parameters form the safe set $\widehat{\Lambda}_{\text{safe}}$, and every member of it satisfies \cref{eq:ltt_guarantee}. The user is free to deploy the member that maximizes an application-specific utility $U(\lambda)$.
