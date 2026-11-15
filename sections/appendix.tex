@@ -126,8 +126,8 @@ Test          & 824  & 0.40 \\
 We compare \gls{method} with two more stopping baselines on all three tasks, using the same calibration and test splits and the same target level $\alpha = 0.1$ as in \cref{sec:experiments_1}. In the figures, \emph{LTT} denotes \gls{method}. Each figure follows the same layout. The \textbf{left panel} shows the cumulative fraction of test samples on which acquisition has stopped. The \textbf{remaining panels} show the risk among the stopped samples, and the horizontal line marks the target.
 
 \paragraph{Baselines.}
-\textbf{Operating Point Method:} At each acquisition time, we select a threshold using the calibration set to target an empirical false negative rate (\textsc{fnr}) of $\alpha$ across all calibration samples.
-\textbf{Selective Inference:} At each acquisition time, we similarly select a threshold using the calibration set, but evaluate empirical \textsc{fnr} only among the samples selected for early stopping. Both baselines use the same calibration and test splits as \gls{method} and the nominal target $\alpha=0.1$. Unlike \gls{method}, these empirical operating-point procedures do not provide a finite-sample risk-control guarantee.
+\textbf{Operating Point Method:} At each acquisition time, we select a threshold on the calibration set to target empirical task-specific risk $\alpha$ across all calibration samples.
+\textbf{Selective Inference:} At each acquisition time, we similarly select a threshold on the calibration set, but evaluate empirical risk only among the samples selected for early stopping. The risk is misclassification on \textsc{cifar}-10 and class-conditional \textsc{fnr} for the MRI tasks. Both baselines use the same calibration and test splits as \gls{method}, with nominal target $\alpha=0.1$. Neither empirical threshold-selection procedure, as implemented here, provides the finite-sample risk certificate of \gls{method}.
 
 % ---------------------------------------------------------------------
 \paragraph{CIFAR-10.}
@@ -173,7 +173,7 @@ We compare \gls{method} with two more stopping baselines on all three tasks, usi
 
 % ---------------------------------------------------------------------
 \paragraph{Summary.}
-The Operating Point Method stops the most samples on every task but exceeds the target risk on all three. Selective Inference stays within the target on knee but exceeds it on \textsc{cifar}-10 (from a $30\%$ sampling rate onward) and on prostate (at every checkpoint). \gls{method} stays within the target on all three tasks, except at the two earliest \textsc{cifar}-10 rates. The cost is that it stops fewer samples than the baselines.
+The Operating Point Method stops the most samples on every task but exceeds the target risk on all three. Selective Inference stays within the target on knee but exceeds it on \textsc{cifar}-10 (from a $30\%$ sampling rate onward) and on prostate (at every checkpoint). At the final acquisition horizon, \gls{method} meets the empirical stopped-cohort risk target in all three tasks, while the two earliest \textsc{cifar}-10 checkpoint accuracies fall below the target. These intermediate measurements are not separately certified. \gls{method} generally stops fewer samples than the baselines, although the relative efficiency changes with acquisition time.
 
 
 % =====================================================================
