@@ -172,8 +172,6 @@ We compare \gls{method} with two more stopping baselines on all three tasks, usi
 % ---------------------------------------------------------------------
 \paragraph{Summary.}
 The Operating Point Method stops the most samples on every task but exceeds the target risk on all three. Selective Inference stays within the target on knee but exceeds it on \textsc{cifar}-10 (from a $30\%$ sampling rate onward) and on prostate (at every checkpoint). At the final acquisition horizon, \gls{method} meets the empirical stopped-cohort risk target in all three tasks, while the two earliest \textsc{cifar}-10 checkpoint accuracies fall below the target. These intermediate measurements are not separately certified. \gls{method} generally stops fewer samples than the baselines, although the relative efficiency changes with acquisition time.
-
-
 % =====================================================================
 % Appendix: ablations on delta, lambda-grid density, calibration-set size
 % Figures: figures/ablation_cifar_all.png,
