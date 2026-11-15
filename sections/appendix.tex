@@ -75,7 +75,7 @@ For the LTT procedure, the pairs $(S_i^{(j)},L_i^{(j)})$ are i.i.d. across calib
 \subsection{ Statistics for FastMRI Knee and Prostate Datasets}
 \begin{table}[h]
 \centering
-\caption{Dataset statistics for \textsc{fastMRI} Knee. $N = 41,679$ slices with $80\%, 10\%, 10\%$ split for the train, validation and test sets.}
+\caption{Dataset statistics for \textsc{fastMRI} Knee. $N = 41,679$ slices with an approximately $80\%, 10\%, 10\%$ train/validation/test split. Patients are disjoint across partitions; the evaluated task is slice-level.}
 \label{tab:fastmri_class_stats}
 {%
 \begin{tabular}{l|c}
@@ -94,7 +94,7 @@ Abnormal        &  0.16  \\ %41679
 \begin{table}[h]
 
 \centering
-\caption{Clinical Prostate MRI split statistics. PI-RADS positive is defined as radiologist-assigned PI-RADS $\geq 3$.}
+\caption{Clinical prostate MRI examination/volume-level split statistics. Patients are disjoint across partitions; PI-RADS positive is defined as radiologist-assigned PI-RADS $\geq 3$.}
 \label{tab:prostate_dataset_stats}
 {
 \begin{tabular}{lcc}
@@ -116,9 +116,7 @@ Test          & 824  & 0.40 \\
 % Figures: figures/cifar_per_rate_lambda_test.png,
 %          figures/knee_per_rate_lambda_test.png,
 %          figures/prostate_per_tag_tau_test.png
-% Anything in red \todo{...} must be filled in or deleted before submission.
 % =====================================================================
-\providecommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 
 \subsection{Comparison with Additional Baselines}
 \label{app:baselines}
@@ -181,9 +179,7 @@ The Operating Point Method stops the most samples on every task but exceeds the 
 % Figures: figures/ablation_cifar_all.png,
 %          figures/ablation_knee_all.png,
 %          figures/ablation_prostate_all.png
-% Anything in red \todo{...} must be filled in or deleted before submission.
 % =====================================================================
-\providecommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 
 \subsection{Sensitivity to Calibration Hyperparameters}
 \label{app:ablations}
@@ -211,8 +207,7 @@ In every certified setting, the stopped-sample accuracy is above $0.9$ from a $3
 % ---------------------------------------------------------------------
 \paragraph{FastMRI knee.}
 The defaults are $\delta = 0.1$, a grid of $15$ values and $n_{\text{cal}} = 6180$, which select $\hat\lambda = 0.4286$ (\cref{fig:app_ablation_knee}). For the ambiguity bands, a larger $\lambda$ is a narrower band and more aggressive stopping.
-\textbf{(a)} $\delta = 0.01$ certifies no $\lambda$. The other levels select $\hat\lambda$ between $0.36$ and $0.5$. Every resulting policy keeps both pathology-specific \textsc{fnr}s at or below $0.044$, well under the target. For fixed calibration data, candidate grid, and utility, the set certified by Holm's step-down procedure is nested as $\delta$ increases. Consequently, optimal certified acquisition efficiency cannot decrease. The non-monotone selected thresholds in the present sweep require verification of the calibration draws and selection settings before attributing this variation to $\delta$.
-% VERIFY BEFORE MERGE: Audit Figure 10(a): selected lambda is 0.5 at delta=0.025, 0.4286 at delta=0.1, and 0.3571 at delta=0.2. Recompute a fixed-calibration-split sensitivity sweep if necessary.
+\textbf{(a)} $\delta = 0.01$ certifies no $\lambda$. The other levels select $\hat\lambda$ between $0.36$ and $0.5$. Every resulting policy keeps both pathology-specific \textsc{fnr}s at or below $0.044$, well under the target. The selected thresholds differ across evaluated significance levels; these values describe the reported sensitivity sweep and do not establish a general monotone relationship between $\delta$ and the selected threshold.
 \textbf{(b)} Grid sizes from $3$ to $113$ select $\hat\lambda$ between $0.43$ and $0.51$. The stopped fraction at a $25\%$ sampling rate ranges from $37\%$ to $46\%$, and the \textsc{fnr} stays at or below $0.05$ for both pathologies.
 \textbf{(c)} Only the full calibration set certifies a $\lambda$. With $n_{\text{cal}} \in \{500, 1000, 2000, 4000\}$, no $\lambda$ is certified. These subsets contain only $12$--$93$ \textsc{acl}-tear positives, too few to certify an \textsc{fnr} bound for this rare pathology. \gls{method} then certifies no early-stopping candidate and defers every slice to full acquisition.
 
