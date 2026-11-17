@@ -121,7 +121,7 @@ Test          & 824  & 0.40 \\
 \subsection{Comparison with Additional Baselines}
 \label{app:baselines}
 
-We compare \gls{method} with two more stopping baselines on all three tasks, using the same calibration and test splits and the same target level $\alpha = 0.1$ as in \cref{sec:experiments_1}. In the figures, \emph{LTT} denotes \gls{method}. Each figure follows the same layout. The \textbf{left panel} shows the cumulative fraction of test samples on which acquisition has stopped. The \textbf{remaining panels} show the risk among the stopped samples, and the horizontal line marks the target.
+We compare \gls{method} with two more stopping baselines on all three tasks, using the same calibration and test splits and the same target level $\alpha = 0.1$ as in \cref{sec:experiments_1}. Each figure follows the same layout. The \textbf{left panel} shows the cumulative fraction of test samples on which acquisition has stopped. The \textbf{remaining panels} show the risk among the stopped samples, and the horizontal line marks the target.
 
 \paragraph{Baselines.}
 \textbf{Operating Point Method:} At each acquisition time, we select a threshold on the calibration set to target empirical task-specific risk $\alpha$ across all calibration samples.
@@ -241,6 +241,74 @@ The defaults are $\delta = 0.1$, a grid of $51$ values and $n_{\text{cal}} = 745
 % ---------------------------------------------------------------------
 \paragraph{Summary.}
 \gls{method} is insensitive to $\delta$ and to the grid size over a wide range. Changing either moves $\hat\lambda$ only slightly, and the stopped-sample risk stays below the target in every certified setting, except at the two earliest \textsc{cifar}-10 rates. A very coarse grid can miss the safe region entirely (\textsc{cifar}-10, $11$ values). The calibration set size is the main limit. What matters is the number of calibration samples in the class whose error rate is controlled. For prostate, $84$ PI-RADS positives were too few and $168$ were enough. For knee, $93$ \textsc{acl}-tear positives were too few and the full set's $155$ were enough. Below that, \gls{method} certifies no rule and defers to full acquisition rather than returning an unsafe one.
+
+
+% =====================================================================
+% Appendix: comparison with Ringel et al. (time-conditional method)
+% Figures: figures/cifar_ringel_vs_ltt_test.png,
+%          figures/knee_ringel_vs_ltt_test.png,
+%          figures/prostate_ringel_vs_ltt_test.png
+% =====================================================================
+\providecommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\subsection{Comparison with \citet{ringel2024early}}
+\label{app:ringel}
+
+\paragraph{Risk and guarantee.}
+\citet{ringel2024early} calibrate a stopping rule for early time-series classification with LTT. They control the \emph{accuracy gap}: the event that the prediction at full acquisition is correct but the prediction at the stopping time is not,
+\begin{align}
+    L_{\text{gap}} = \big(\mathbf{1}\{y = \hat{y}(\mbx_d)\} - \mathbf{1}\{y = \hat{y}(\mbx_{\tau})\}\big)_+ .
+\end{align}
+This risk is \emph{relative} to the full-acquisition prediction. It is zero for a sample that the model gets wrong both early and at full acquisition, whereas the risk controlled by \gls{method} is measured against the ground-truth label $y$. They propose a marginal variant and a time-conditional variant. We compare with the time-conditional variant, which they present as their main contribution. It controls the accuracy gap among the samples that have stopped by step $t$, at every step simultaneously:
+\begin{align}
+    \bbP_{\cD_{\text{cal}}}\Big[\, \E\big[L_{\text{gap}} \,\big|\, \tau_{\hat{\boldsymbol\lambda}}(\mbx) \le t\big] \le \alpha \ \ \text{for all } t \ge t_0 \Big] \ge 1 - \delta ,
+\end{align}
+where $t_0$ is the first step at which stopping has positive probability.
+
+\paragraph{Procedure.}
+The stopping rule uses one threshold per step, $\boldsymbol\lambda = (\lambda_1, \dots, \lambda_d)$, and stops at $\tau_{\boldsymbol\lambda}(\mbx) = \min\{t : \hat\pi(\mbx_t) \ge \lambda_t \text{ or } t = d\}$, where $\hat\pi$ is a confidence score. Every sample is therefore stopped by step $d$ at the latest, and there is no deferral. The calibration set is split into two parts. \emph{Stage~1} uses the first part to choose a candidate threshold vector greedily, one step at a time, so that the empirical accumulated accuracy gap stays below $\alpha$. \emph{Stage~2} uses the second part to apply fixed-sequence testing. Starting from step $d$ and moving backwards, it enables the candidate threshold of each earlier step in turn. A configuration is certified if the binomial-tail p-value for the accumulated accuracy gap is at most $\delta$ at every step from that point to $d$. Testing stops at the first configuration that fails, and the last certified configuration is returned. As a result, early steps can only stop samples if every later step has been certified.
+
+\paragraph{Reading the figures.}
+\Cref{fig:app_ringel_cifar,fig:app_ringel_knee,fig:app_ringel_prostate} report, for both methods, the cumulative fraction of samples stopped and the \emph{absolute} risk among stopped samples, which is the risk that \gls{method} controls. The horizontal line is the target of \gls{method}. \citet{ringel2024early} certify a different, relative risk, so curves above this line do not violate their guarantee. They show how far the relative and absolute risks can differ on the same data. Both methods use the same pre-trained predictor, calibration data and test set, at $\alpha = 0.1$.
+
+% ---------------------------------------------------------------------
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/cifar_ringel_vs_ltt_test.png}
+    \caption{\textbf{\gls{method} vs.\ \citet{ringel2024early} on \textsc{cifar}-10 ($\alpha = 0.1$).}
+    \textbf{Left:} cumulative fraction of samples stopped.
+    \textbf{Right:} accuracy among stopped samples; the horizontal line marks $1-\alpha = 0.9$.}
+    \label{fig:app_ringel_cifar}
+\end{figure}
+
+\paragraph{CIFAR-10.}
+We run the time-conditional algorithm of \citet{ringel2024early} with their accuracy-gap loss, unchanged. The calibration set is split evenly between Stage~1 and Stage~2. No configuration that stops at the $10\%$ or $20\%$ sampling rate is certified. \citet{ringel2024early} then stop $62\%$ of samples at $30\%$ and all samples by $80\%$, with stopped-sample accuracy falling from $0.81$ to $0.71$.
+
+% ---------------------------------------------------------------------
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/knee_ringel_vs_ltt_test.png}
+    \caption{\textbf{\gls{method} vs.\ \citet{ringel2024early} on \textsc{fastMRI} knee ($\alpha = 0.1$).}
+    \textbf{Left:} cumulative fraction of slices stopped.
+    \textbf{Center/Right:} \textsc{fnr} among stopped \textsc{acl}-tear and meniscus-tear positives; the horizontal line marks $\alpha = 0.1$.}
+    \label{fig:app_ringel_knee}
+\end{figure}
+
+\paragraph{FastMRI knee.}
+The calibration set is split evenly between Stage~1 and Stage~2. Because the controlled risk is a class-conditional \textsc{fnr}, we use the \textsc{fnr} counterpart of the accuracy gap: among true positives, the event that the prediction at the last step is positive but the prediction at the stopping time is negative, $\mathbf{1}\{\hat{y}(\mbx_d) = 1,\ \hat{y}(\mbx_{\tau}) = 0\}$ given $y = 1$. This is the accuracy-gap loss restricted to the positive class. Acquisition ends at a $25\%$ sampling rate, so the reference prediction is the one at $25\%$ rather than at full acquisition. Because every sample must stop by the last step, \citet{ringel2024early} stop all slices at $25\%$. The risk is computed separately for \textsc{acl} tear and meniscus tear, and a configuration is certified only if it passes for both labels. The knee and prostate classifiers output a positive-class score per label rather than a single confidence score, so instead of the threshold rule $\hat\pi(\mbx_t) \ge \lambda_t$ we use the ambiguity-band stopping rule of \gls{method} (\cref{app:ambiguity_bands}), with a separate band parameter $\lambda_t$ for each step in place of the single $\lambda$. Here a larger $\lambda_t$ gives a narrower band and makes stopping easier.
+
+% ---------------------------------------------------------------------
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/prostate_ringel_vs_ltt_test.png}
+    \caption{\textbf{\gls{method} vs.\ \citet{ringel2024early} on clinical prostate \textsc{mri} ($\alpha = 0.1$).}
+    \textbf{Left:} cumulative fraction of exams stopped at each DWI checkpoint.
+    \textbf{Right:} \textsc{fnr} among stopped PI-RADS-positive exams; the horizontal line marks $\alpha = 0.1$.}
+    \label{fig:app_ringel_prostate}
+\end{figure}
+
+\paragraph{Clinical prostate MRI.}
+The calibration set is split evenly between Stage~1 and Stage~2, and we use the same \textsc{fnr} counterpart of the accuracy gap as for knee. The reference prediction is the one at the final checkpoint (\texttt{b50\_4\_b1000\_12}, the full DWI protocol). \citet{ringel2024early} stop $96\%$ of exams at the first checkpoint and all exams by the third, with an absolute \textsc{fnr} of about $0.29$ among the stopped exams. The stopping rule is the same per-step ambiguity-band rule as for knee.
 
 % \begin{figure}[ht]
 %     \centering
